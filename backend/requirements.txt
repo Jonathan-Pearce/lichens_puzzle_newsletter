@@ -3,6 +3,6 @@ Flask-CORS==4.0.0
 requests==2.31.0
 python-chess==1.999
 reportlab==4.0.7
-Pillow==10.1.0
+Pillow==10.3.0
 APScheduler==3.10.4
 python-dotenv==1.0.0
