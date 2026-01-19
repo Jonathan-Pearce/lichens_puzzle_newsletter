@@ -4,6 +4,7 @@ from lichess_api import get_puzzles_for_user
 from pdf_generator import generate_puzzle_pdf
 from email_service import send_newsletter_email
 import os
+import tempfile
 from datetime import datetime
 
 def generate_and_send_newsletter(user):
@@ -15,6 +16,7 @@ def generate_and_send_newsletter(user):
     """
     print(f"Generating newsletter for {user['email']} ({user['lichess_username']})")
     
+    pdf_path = None
     try:
         # Get puzzles from user's games
         puzzles = get_puzzles_for_user(user['lichess_username'])
@@ -23,8 +25,10 @@ def generate_and_send_newsletter(user):
             print(f"No puzzles found for {user['lichess_username']}")
             return
         
-        # Generate PDF
-        pdf_path = f"/tmp/chess_puzzles_{user['lichess_username']}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        # Generate PDF with a temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.pdf', delete=False) as tmp_file:
+            pdf_path = tmp_file.name
+        
         generate_puzzle_pdf(puzzles, pdf_path)
         
         # Send email
@@ -33,13 +37,16 @@ def generate_and_send_newsletter(user):
         if success:
             update_newsletter_sent(user['id'])
             print(f"Newsletter sent successfully to {user['email']}")
-        
-        # Clean up PDF
-        if os.path.exists(pdf_path):
-            os.remove(pdf_path)
             
     except Exception as e:
         print(f"Error generating newsletter for {user['email']}: {e}")
+    finally:
+        # Clean up PDF in finally block to ensure cleanup happens
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                os.remove(pdf_path)
+            except Exception as e:
+                print(f"Error removing temporary file {pdf_path}: {e}")
 
 def send_newsletters_to_all_users():
     """Send newsletters to all registered users."""

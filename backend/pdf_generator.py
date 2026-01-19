@@ -94,7 +94,10 @@ def generate_puzzle_pdf(puzzles, output_path):
         c.drawString(inch, y_pos + board_size + 0.2 * inch, f"Puzzle {idx + 1}")
         
         c.setFont("Helvetica", 10)
-        c.drawString(inch, y_pos + board_size, f"Move {puzzle['move_number']} - White to move" if 'white' in puzzle.get('position', '') else f"Move {puzzle['move_number']}")
+        # Determine whose turn it is from the FEN position
+        board = chess.Board(puzzle['position'])
+        turn_text = "White to move" if board.turn == chess.WHITE else "Black to move"
+        c.drawString(inch, y_pos + board_size, f"Move {puzzle['move_number']} - {turn_text}")
         
         # Draw chess board
         draw_chessboard(c, inch, y_pos, board_size, puzzle['position'])

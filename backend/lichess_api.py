@@ -1,6 +1,7 @@
 import requests
 import chess
 import chess.pgn
+import json
 from io import StringIO
 
 LICHESS_API_BASE = "https://lichess.org/api"
@@ -35,7 +36,6 @@ def fetch_recent_games(username, max_games=10):
         games = []
         for line in response.text.strip().split('\n'):
             if line:
-                import json
                 game = json.loads(line)
                 games.append(game)
         
