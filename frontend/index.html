@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Puzzle Newsletter - Signup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .chess-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error {
+            border-color: #f44336;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="chess-icon">♟️</div>
+            <h1>Chess Puzzle Newsletter</h1>
+            <p class="subtitle">Get personalized puzzles from your Lichess games</p>
+        </div>
+
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <form id="signup-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="your.email@example.com"
+                    required
+                />
+                <div id="email-error" class="error-message" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="lichess_username">Lichess Username</label>
+                <input 
+                    type="text" 
+                    id="lichess_username" 
+                    name="lichess_username" 
+                    placeholder="Your Lichess username"
+                    required
+                />
+                <div id="username-error" class="error-message" style="display: none;"></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn">
+                Subscribe to Newsletter
+            </button>
+
+            <div id="loading" class="loading" style="display: none;">
+                Processing your request...
+            </div>
+        </form>
+
+        <div class="info-box">
+            <strong>📧 What you'll get:</strong><br>
+            Weekly personalized chess puzzles based on your recent Lichess games. 
+            We analyze your games to find instructive positions where you can improve!
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        const form = document.getElementById('signup-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('success-message');
+        const emailInput = document.getElementById('email');
+        const usernameInput = document.getElementById('lichess_username');
+        const emailError = document.getElementById('email-error');
+        const usernameError = document.getElementById('username-error');
+
+        // Clear error messages on input
+        emailInput.addEventListener('input', () => {
+            emailInput.classList.remove('error');
+            emailError.style.display = 'none';
+        });
+
+        usernameInput.addEventListener('input', () => {
+            usernameInput.classList.remove('error');
+            usernameError.style.display = 'none';
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Reset states
+            successMessage.style.display = 'none';
+            emailError.style.display = 'none';
+            usernameError.style.display = 'none';
+            emailInput.classList.remove('error');
+            usernameInput.classList.remove('error');
+
+            const email = emailInput.value.trim();
+            const lichess_username = usernameInput.value.trim();
+
+            // Client-side validation
+            let hasError = false;
+
+            if (!email || !email.includes('@')) {
+                emailInput.classList.add('error');
+                emailError.textContent = 'Please enter a valid email address';
+                emailError.style.display = 'block';
+                hasError = true;
+            }
+
+            if (!lichess_username) {
+                usernameInput.classList.add('error');
+                usernameError.textContent = 'Please enter your Lichess username';
+                usernameError.style.display = 'block';
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Disable form during submission
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, lichess_username })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    successMessage.textContent = '✅ ' + data.message + ' Check your email weekly for puzzles!';
+                    successMessage.style.display = 'block';
+                    form.reset();
+                } else {
+                    if (data.error.includes('email')) {
+                        emailInput.classList.add('error');
+                        emailError.textContent = data.error;
+                        emailError.style.display = 'block';
+                    } else {
+                        usernameInput.classList.add('error');
+                        usernameError.textContent = data.error;
+                        usernameError.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                emailError.textContent = 'Network error. Please check if the backend server is running.';
+                emailError.style.display = 'block';
+                console.error('Signup error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
