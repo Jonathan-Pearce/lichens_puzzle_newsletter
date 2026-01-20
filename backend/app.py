@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from database import init_db, add_user, get_all_users
 from scheduler import start_scheduler, generate_and_send_newsletter
@@ -9,13 +9,24 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend communication
+# Allow requests from GitHub Pages and localhost
+allowed_origins = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "https://jonathan-pearce.github.io"
+]
+CORS(app, origins=allowed_origins)
 
 # Initialize database
 init_db()
 
 # Start scheduler for weekly newsletters
 scheduler = start_scheduler()
+
+@app.route('/')
+def serve_frontend():
+    """Serve the frontend HTML file."""
+    return send_from_directory('../frontend', 'index.html')
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
